@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salary Calculator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(to bottom, #e0f7fa, #80deea);
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            width: 90vw;
+            max-width: 400px;
+            padding: 20px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .icon {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .icon i {
+            font-size: 64px;
+            color: #4caf50;
+        }
+        .input-section, .output-section {
+            margin-bottom: 20px;
+        }
+        label {
+            font-size: 18px;
+            color: #555;
+            display: block;
+            margin-bottom: 5px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            font-size: 24px;
+            text-align: center;
+            border: none;
+            border-radius: 15px;
+            background-color: #f0f0f0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+        }
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .keypad button {
+            padding: 20px;
+            font-size: 24px;
+            border: none;
+            border-radius: 50%;
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }
+        .keypad button.delete, .keypad button.clear {
+            background-color: rgba(255, 0, 0, 0.7);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">
+            <i class="fas fa-dollar-sign"></i>
+        </div>
+        <div class="input-section">
+            <label for="hours">Hours Worked</label>
+            <input type="text" id="hours" readonly value="0">
+        </div>
+        <div class="keypad">
+            <button>1</button>
+            <button>2</button>
+            <button>3</button>
+            <button>4</button>
+            <button>5</button>
+            <button>6</button>
+            <button>7</button>
+            <button>8</button>
+            <button>9</button>
+            <button>0</button>
+            <button>.</button>
+            <button class="delete">Delete</button>
+            <button class="clear">Clear</button>
+        </div>
+        <div class="output-section">
+            <label for="salary">Expected Salary</label>
+            <input type="text" id="salary" readonly value="$0.00">
+        </div>
+    </div>
+    <script>
+        const regularRate = 65.0;
+        const overtimeRate = 97.5;
+        let hours = '';
+        let salary = '';
+
+        function buttonTapped(button) {
+            switch (button) {
+                case 'Clear':
+                    hours = '';
+                    break;
+                case 'Delete':
+                    if (hours.length > 0) {
+                        hours = hours.slice(0, -1);
+                    }
+                    break;
+                case '.':
+                    if (!hours.includes('.')) {
+                        hours += button;
+                    }
+                    break;
+                default:
+                    if (hours.length < 6) {
+                        hours += button;
+                    }
+            }
+            updateHoursDisplay();
+            calculateSalary();
+        }
+
+        function calculateSalary() {
+            const hoursWorked = parseFloat(hours);
+            if (isNaN(hoursWorked)) {
+                salary = '';
+            } else if (hoursWorked <= 40) {
+                const calculatedSalary = hoursWorked * regularRate * 0.656;
+                salary = calculatedSalary.toFixed(2);
+            } else {
+                const regularSalary = 40 * regularRate * 0.656;
+                const overtimeHours = hoursWorked - 40;
+                const overtimeSalary = overtimeHours * overtimeRate * 0.656;
+                const totalSalary = regularSalary + overtimeSalary;
+                salary = totalSalary.toFixed(2);
+            }
+            updateSalaryDisplay();
+        }
+
+        function updateHoursDisplay() {
+            document.getElementById('hours').value = hours || '0';
+        }
+
+        function updateSalaryDisplay() {
+            document.getElementById('salary').value = salary ? `$${salary}` : '$0.00';
+        }
+
+        document.querySelectorAll('.keypad button').forEach(button => {
+            button.addEventListener('click', () => {
+                buttonTapped(button.textContent);
+            });
+        });
+    </script>
+</body>
+</html>
