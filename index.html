@@ -6,68 +6,167 @@
     <title>Salary Calculator</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
+        :root {
+            --primary-color: #2196f3;
+            --secondary-color: #1976d2;
+            --background-gradient: linear-gradient(135deg, #f6f9fc 0%, #eef3f8 100%);
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --text-color: #37474f;
+            --transition: all 0.3s ease;
+        }
+
         body {
-            background: linear-gradient(to bottom, #e0f7fa, #80deea);
-            font-family: Arial, sans-serif;
+            background: var(--background-gradient);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
+            color: var(--text-color);
         }
+
         .container {
             width: 90vw;
             max-width: 400px;
-            padding: 20px;
+            padding: 2rem;
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 24px;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            transform: translateY(0);
+            transition: var(--transition);
         }
+
+        .container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px var(--shadow-color);
+        }
+
         .icon {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 2rem;
+            animation: float 3s ease-in-out infinite;
         }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
         .icon i {
-            font-size: 64px;
-            color: #4caf50;
+            font-size: 3.5rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
+
         .input-section, .output-section {
-            margin-bottom: 20px;
+            margin-bottom: 1.5rem;
         }
+
         label {
-            font-size: 18px;
-            color: #555;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-color);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 0.5rem;
         }
+
         input {
             width: 100%;
-            padding: 10px;
-            font-size: 24px;
+            padding: 1rem;
+            font-size: 1.5rem;
             text-align: center;
-            border: none;
-            border-radius: 15px;
-            background-color: #f0f0f0;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            background-color: #f8fafc;
+            transition: var(--transition);
+            color: var(--text-color);
+            font-weight: 600;
             box-sizing: border-box;
         }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: white;
+        }
+
         .keypad {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
         }
+
         .keypad button {
-            padding: 20px;
-            font-size: 24px;
+            padding: 1rem;
+            font-size: 1.25rem;
             border: none;
-            border-radius: 50%;
+            border-radius: 12px;
             background-color: white;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            color: var(--text-color);
+            box-shadow: 0 2px 8px var(--shadow-color);
             cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
         }
+
+        .keypad button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+            background-color: #f8fafc;
+        }
+
+        .keypad button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+
         .keypad button.delete, .keypad button.clear {
-            background-color: rgba(255, 0, 0, 0.7);
+            background: linear-gradient(135deg, #ff4b4b, #ff6b6b);
             color: white;
+        }
+
+        .keypad button.delete:hover, .keypad button.clear:hover {
+            background: linear-gradient(135deg, #ff6b6b, #ff8787);
+        }
+
+        #salary {
+            font-size: 2rem;
+            color: var(--primary-color);
+            font-weight: 700;
+            background-color: #f8fafc;
+            border: 2px solid transparent;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1.5rem;
+                border-radius: 20px;
+            }
+
+            .keypad button {
+                padding: 0.75rem;
+                font-size: 1.1rem;
+            }
+
+            input {
+                font-size: 1.25rem;
+                padding: 0.75rem;
+            }
+
+            #salary {
+                font-size: 1.75rem;
+            }
+        }
+
+        /* Add smooth transitions for all interactive elements */
+        * {
+            transition: var(--transition);
         }
     </style>
 </head>
