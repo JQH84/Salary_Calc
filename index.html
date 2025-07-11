@@ -135,12 +135,12 @@
             if (isNaN(hoursWorked)) {
                 salary = '';
             } else if (hoursWorked <= 40) {
-                constant calculatedSalary = hoursWorked * regularRate * 0.6856;
+                constant calculatedSalary = hoursWorked * regularRate * 0.7;
                 salary = calculatedSalary.toFixed(2);
             } else {
-                const regularSalary = 40 * regularRate * 0.6856;
+                const regularSalary = 40 * regularRate * 0.7;
                 const overtimeHours = hoursWorked - 40;
-                const overtimeSalary = overtimeHours * overtimeRate * 0.6856;
+                const overtimeSalary = overtimeHours * overtimeRate * 0.7;
                 const totalSalary = regularSalary + overtimeSalary;
                 salary = totalSalary.toFixed(2);
             }
