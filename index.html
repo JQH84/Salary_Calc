@@ -52,22 +52,7 @@
             box-sizing: border-box;
         }
         .keypad {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-        }
-        .keypad button {
-            padding: 20px;
-            font-size: 24px;
-            border: none;
-            border-radius: 50%;
-            background-color: white;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            cursor: pointer;
-        }
-        .keypad button.delete, .keypad button.clear {
-            background-color: rgba(255, 0, 0, 0.7);
-            color: white;
+            display: none;
         }
     </style>
 </head>
@@ -77,89 +62,96 @@
             <i class="fas fa-dollar-sign"></i>
         </div>
         <div class="input-section">
-            <label for="hours">Hours Worked</label>
-            <input type="text" id="hours" readonly value="0">
+            <label for="frequency">Pay Frequency</label>
+            <select id="frequency" style="width: 100%; padding: 10px; font-size: 18px; border: none; border-radius: 15px; background-color: #f0f0f0; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                <option value="weekly">Weekly</option>
+                <option value="biweekly" selected>Biweekly</option>
+                <option value="monthly">Monthly</option>
+            </select>
         </div>
-        <div class="keypad">
-            <button>1</button>
-            <button>2</button>
-            <button>3</button>
-            <button>4</button>
-            <button>5</button>
-            <button>6</button>
-            <button>7</button>
-            <button>8</button>
-            <button>9</button>
-            <button>0</button>
-            <button>.</button>
-            <button class="delete">Delete</button>
-            <button class="clear">Clear</button>
+        <div class="input-section">
+            <label for="standardHours">Standard Hours per Week</label>
+            <input type="number" id="standardHours" value="40" min="0" step="0.1" inputmode="decimal" style="width: 100%; padding: 10px; font-size: 24px; text-align: center; border: none; border-radius: 15px; background-color: #f0f0f0; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); box-sizing: border-box;">
+        </div>
+        <div class="input-section">
+            <label for="hours">Total Hours Worked in Pay Period</label>
+            <input type="number" id="hours" value="0" inputmode="decimal" step="0.01">
         </div>
         <div class="output-section">
             <label for="salary">Expected Salary</label>
             <input type="text" id="salary" readonly value="$0.00">
         </div>
+        <div class="input-section">
+            <label for="taxRate">Tax Rate (%)</label>
+            <input type="number" id="taxRate" value="30" min="0" max="100" step="0.1" inputmode="decimal" style="width: 100%; padding: 10px; font-size: 24px; text-align: center; border: none; border-radius: 15px; background-color: #f0f0f0; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); box-sizing: border-box;">
+        </div>
+        <div class="output-section">
+            <label for="takeHome">Take-Home Pay</label>
+            <input type="text" id="takeHome" readonly value="$0.00">
+        </div>
+        <div class="input-section">
+            <label for="monthlyBills">Fixed Monthly Bills</label>
+            <input type="number" id="monthlyBills" value="0" min="0" step="0.01" inputmode="decimal" style="width: 100%; padding: 10px; font-size: 24px; text-align: center; border: none; border-radius: 15px; background-color: #f0f0f0; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); box-sizing: border-box;">
+        </div>
+        <div class="output-section">
+            <label for="netSpendable">Net Spendable (Monthly)</label>
+            <input type="text" id="netSpendable" readonly value="$0.00">
+        </div>
     </div>
     <script>
         const regularRate = 65.0;
         const overtimeRate = 97.5;
-        let hours = '';
         let salary = '';
-
-        function buttonTapped(button) {
-            switch (button) {
-                case 'Clear':
-                    hours = '';
-                    break;
-                case 'Delete':
-                    if (hours.length > 0) {
-                        hours = hours.slice(0, -1);
-                    }
-                    break;
-                case '.':
-                    if (!hours.includes('.')) {
-                        hours += button;
-                    }
-                    break;
-                default:
-                    if (hours.length < 6) {
-                        hours += button;
-                    }
-            }
-            updateHoursDisplay();
-            calculateSalary();
-        }
+        let takeHome = '';
+        let netSpendable = '';
 
         function calculateSalary() {
-            const hoursWorked = parseFloat(hours);
-            if (isNaN(hoursWorked)) {
-                salary = '';
-            } else if (hoursWorked <= 40) {
-                constant calculatedSalary = hoursWorked * regularRate * 0.7;
-                salary = calculatedSalary.toFixed(2);
-            } else {
-                const regularSalary = 40 * regularRate * 0.7;
-                const overtimeHours = hoursWorked - 40;
-                const overtimeSalary = overtimeHours * overtimeRate * 0.7;
-                const totalSalary = regularSalary + overtimeSalary;
-                salary = totalSalary.toFixed(2);
+            const hoursWorked = parseFloat(document.getElementById('hours').value) || 0;
+            const frequency = document.getElementById('frequency').value;
+            const standardPerWeek = parseFloat(document.getElementById('standardHours').value) || 0;
+            const taxRate = parseFloat(document.getElementById('taxRate').value) || 0;
+            const monthlyBills = parseFloat(document.getElementById('monthlyBills').value) || 0;
+
+            let totalStandard;
+            let periodsPerMonth;
+            if (frequency === 'weekly') {
+                totalStandard = standardPerWeek;
+                periodsPerMonth = 4.333;
+            } else if (frequency === 'biweekly') {
+                totalStandard = standardPerWeek * 2;
+                periodsPerMonth = 2.166;
+            } else { // monthly
+                totalStandard = standardPerWeek * 4.333;
+                periodsPerMonth = 1;
             }
-            updateSalaryDisplay();
+
+            const standardHours = Math.min(hoursWorked, totalStandard);
+            const otHours = Math.max(0, hoursWorked - totalStandard);
+            const gross = standardHours * regularRate + otHours * overtimeRate;
+            const tax = gross * (taxRate / 100);
+            const takeHomePay = gross - tax;
+            const monthlyTakeHome = takeHomePay * periodsPerMonth;
+            const net = monthlyTakeHome - monthlyBills;
+
+            salary = gross.toFixed(2);
+            takeHome = takeHomePay.toFixed(2);
+            netSpendable = net.toFixed(2);
+
+            updateDisplays();
         }
 
-        function updateHoursDisplay() {
-            document.getElementById('hours').value = hours || '0';
-        }
-
-        function updateSalaryDisplay() {
+        function updateDisplays() {
             document.getElementById('salary').value = salary ? `$${salary}` : '$0.00';
+            document.getElementById('takeHome').value = takeHome ? `$${takeHome}` : '$0.00';
+            document.getElementById('netSpendable').value = netSpendable ? `$${netSpendable}` : '$0.00';
         }
 
-        document.querySelectorAll('.keypad button').forEach(button => {
-            button.addEventListener('click', () => {
-                buttonTapped(button.textContent);
-            });
-        });
+        // Add event listeners for new inputs
+        document.getElementById('frequency').addEventListener('change', calculateSalary);
+        document.getElementById('standardHours').addEventListener('input', calculateSalary);
+        document.getElementById('taxRate').addEventListener('input', calculateSalary);
+        document.getElementById('monthlyBills').addEventListener('input', calculateSalary);
+        document.getElementById('hours').addEventListener('input', calculateSalary);
     </script>
 </body>
 </html>
