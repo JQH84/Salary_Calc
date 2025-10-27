@@ -40,16 +40,43 @@
             display: block;
             margin-bottom: 5px;
         }
-        input {
+        .hint {
+            display: block;
+            font-size: 12px;
+            color: #777;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        input, textarea {
             width: 100%;
             padding: 10px;
             font-size: 24px;
             text-align: center;
-            border: none;
+            border: 2px solid transparent;
             border-radius: 15px;
             background-color: #f0f0f0;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: none;
             box-sizing: border-box;
+        }
+        .input-section input,
+        .input-section textarea {
+            background-color: #ffffff;
+            border-color: #26a69a;
+            box-shadow: 0 6px 12px rgba(38, 166, 154, 0.15);
+        }
+        .input-section input:focus,
+        .input-section textarea:focus {
+            outline: none;
+            border-color: #00796b;
+            box-shadow: 0 8px 16px rgba(0, 121, 107, 0.2);
+        }
+        .output-section input {
+            background-color: #eceff1;
+            border-color: #cfd8dc;
+            color: #37474f;
+            font-weight: 600;
+            box-shadow: inset 0 2px 4px rgba(55, 71, 79, 0.12);
+            cursor: not-allowed;
         }
         .keypad {
             display: none;
@@ -70,20 +97,29 @@
             </select>
         </div>
         <div class="input-section">
-            <label for="standardHours">Standard Hours per Week</label>
-            <input type="number" id="standardHours" value="40" min="0" step="0.1" inputmode="decimal" style="width: 100%; padding: 10px; font-size: 24px; text-align: center; border: none; border-radius: 15px; background-color: #f0f0f0; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); box-sizing: border-box;">
+            <label for="standardHours">Standard Hours per Pay Period</label>
+            <span class="hint" id="standardHint">Recommended: 70 hrs (35 hrs/week)</span>
+            <input type="number" id="standardHours" value="70" min="0" step="0.1" inputmode="decimal" style="width: 100%; padding: 10px; font-size: 24px; text-align: center; border: none; border-radius: 15px; background-color: #f0f0f0; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); box-sizing: border-box;">
         </div>
         <div class="input-section">
             <label for="hours">Total Hours Worked in Pay Period</label>
             <input type="number" id="hours" value="0" inputmode="decimal" step="0.01">
         </div>
         <div class="output-section">
-            <label for="salary">Expected Salary</label>
+            <label for="salary">Gross Pay (before taxes)</label>
             <input type="text" id="salary" readonly value="$0.00">
+        </div>
+        <div class="output-section">
+            <label for="standardBreakdown">Standard Hours • Pay</label>
+            <input type="text" id="standardBreakdown" readonly value="0.00 hrs • $0.00">
+        </div>
+        <div class="output-section">
+            <label for="overtimeBreakdown">Overtime Hours • Pay</label>
+            <input type="text" id="overtimeBreakdown" readonly value="0.00 hrs • $0.00">
         </div>
         <div class="input-section">
             <label for="taxRate">Tax Rate (%)</label>
-            <input type="number" id="taxRate" value="30" min="0" max="100" step="0.1" inputmode="decimal" style="width: 100%; padding: 10px; font-size: 24px; text-align: center; border: none; border-radius: 15px; background-color: #f0f0f0; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); box-sizing: border-box;">
+            <input type="number" id="taxRate" value="27.3189" min="0" max="100" step="0.0001" inputmode="decimal" style="width: 100%; padding: 10px; font-size: 24px; text-align: center; border: none; border-radius: 15px; background-color: #f0f0f0; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); box-sizing: border-box;">
         </div>
         <div class="output-section">
             <label for="takeHome">Take-Home Pay</label>
@@ -91,51 +127,92 @@
         </div>
         <div class="input-section">
             <label for="monthlyBills">Fixed Monthly Bills</label>
-            <input type="number" id="monthlyBills" value="0" min="0" step="0.01" inputmode="decimal" style="width: 100%; padding: 10px; font-size: 24px; text-align: center; border: none; border-radius: 15px; background-color: #f0f0f0; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); box-sizing: border-box;">
+            <span class="hint">Enter amounts separated by + (e.g., 500+600+120)</span>
+            <textarea id="monthlyBills" rows="2" style="width: 100%; padding: 10px; font-size: 20px; text-align: center; border: none; border-radius: 15px; background-color: #f0f0f0; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); box-sizing: border-box;">0</textarea>
         </div>
         <div class="output-section">
-            <label for="netSpendable">Net Spendable (Monthly)</label>
+            <label for="netSpendable">Net Spendable (Per Pay Period)</label>
             <input type="text" id="netSpendable" readonly value="$0.00">
         </div>
     </div>
     <script>
         const regularRate = 65.0;
         const overtimeRate = 97.5;
+        const standardRecommendations = {
+            weekly: { hours: 35, hint: 'Recommended: 35 hrs (one work week)' },
+            biweekly: { hours: 70, hint: 'Recommended: 70 hrs (35 hrs/week)' },
+            monthly: { hours: 152, hint: 'Recommended: 152 hrs (~35 hrs/week)' }
+        };
+
         let salary = '';
         let takeHome = '';
         let netSpendable = '';
+        let userAdjustedStandard = false;
+
+        const frequencySelect = document.getElementById('frequency');
+        const standardInput = document.getElementById('standardHours');
+        const hoursInput = document.getElementById('hours');
+        const taxInput = document.getElementById('taxRate');
+    const billsInput = document.getElementById('monthlyBills');
+        const standardBreakdown = document.getElementById('standardBreakdown');
+        const overtimeBreakdown = document.getElementById('overtimeBreakdown');
+        const standardHint = document.getElementById('standardHint');
+
+        function applyRecommendation(freq, force = false) {
+            const recommendation = standardRecommendations[freq];
+            if (!recommendation) {
+                return;
+            }
+            if (standardHint) {
+                standardHint.textContent = recommendation.hint;
+            }
+            if (force || !userAdjustedStandard) {
+                standardInput.value = recommendation.hours;
+            }
+        }
+
+        function sumBills(billsText) {
+            if (!billsText) {
+                return 0;
+            }
+            return billsText
+                .split('+')
+                .map(part => parseFloat(part.trim()) || 0)
+                .reduce((total, value) => total + value, 0);
+        }
 
         function calculateSalary() {
-            const hoursWorked = parseFloat(document.getElementById('hours').value) || 0;
-            const frequency = document.getElementById('frequency').value;
-            const standardPerWeek = parseFloat(document.getElementById('standardHours').value) || 0;
-            const taxRate = parseFloat(document.getElementById('taxRate').value) || 0;
-            const monthlyBills = parseFloat(document.getElementById('monthlyBills').value) || 0;
+            const hoursWorked = parseFloat(hoursInput.value) || 0;
+            const frequency = frequencySelect.value;
+            const standardPerPeriod = parseFloat(standardInput.value) || 0;
+            const taxRate = parseFloat(taxInput.value) || 0;
+            const monthlyBills = sumBills(billsInput.value);
 
-            let totalStandard;
-            let periodsPerMonth;
+            let periodsPerMonth = 0;
             if (frequency === 'weekly') {
-                totalStandard = standardPerWeek;
                 periodsPerMonth = 4.333;
             } else if (frequency === 'biweekly') {
-                totalStandard = standardPerWeek * 2;
                 periodsPerMonth = 2.166;
-            } else { // monthly
-                totalStandard = standardPerWeek * 4.333;
+            } else {
                 periodsPerMonth = 1;
             }
 
-            const standardHours = Math.min(hoursWorked, totalStandard);
-            const otHours = Math.max(0, hoursWorked - totalStandard);
-            const gross = standardHours * regularRate + otHours * overtimeRate;
+            const standardHours = Math.min(hoursWorked, standardPerPeriod);
+            const otHours = Math.max(0, hoursWorked - standardPerPeriod);
+            const standardPay = standardHours * regularRate;
+            const overtimePay = otHours * overtimeRate;
+            const gross = standardPay + overtimePay;
             const tax = gross * (taxRate / 100);
             const takeHomePay = gross - tax;
-            const monthlyTakeHome = takeHomePay * periodsPerMonth;
-            const net = monthlyTakeHome - monthlyBills;
+            const billsPerPeriod = periodsPerMonth > 0 ? monthlyBills / periodsPerMonth : 0;
+            const net = takeHomePay - billsPerPeriod;
 
             salary = gross.toFixed(2);
             takeHome = takeHomePay.toFixed(2);
             netSpendable = net.toFixed(2);
+
+            standardBreakdown.value = `${standardHours.toFixed(2)} hrs • $${standardPay.toFixed(2)}`;
+            overtimeBreakdown.value = `${otHours.toFixed(2)} hrs • $${overtimePay.toFixed(2)}`;
 
             updateDisplays();
         }
@@ -146,12 +223,23 @@
             document.getElementById('netSpendable').value = netSpendable ? `$${netSpendable}` : '$0.00';
         }
 
-        // Add event listeners for new inputs
-        document.getElementById('frequency').addEventListener('change', calculateSalary);
-        document.getElementById('standardHours').addEventListener('input', calculateSalary);
-        document.getElementById('taxRate').addEventListener('input', calculateSalary);
-        document.getElementById('monthlyBills').addEventListener('input', calculateSalary);
-        document.getElementById('hours').addEventListener('input', calculateSalary);
+        frequencySelect.addEventListener('change', () => {
+            userAdjustedStandard = false;
+            applyRecommendation(frequencySelect.value, true);
+            calculateSalary();
+        });
+
+        standardInput.addEventListener('input', () => {
+            userAdjustedStandard = true;
+            calculateSalary();
+        });
+
+    taxInput.addEventListener('input', calculateSalary);
+    billsInput.addEventListener('input', calculateSalary);
+        hoursInput.addEventListener('input', calculateSalary);
+
+        applyRecommendation(frequencySelect.value, true);
+        calculateSalary();
     </script>
 </body>
 </html>
