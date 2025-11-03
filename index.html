@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Salary Calculator</title>
+    <meta name="description" content="Calculate your take-home pay with overtime, taxes, and expenses. Mobile-friendly salary calculator for weekly, bi-weekly, and monthly paychecks.">
+    <meta name="keywords" content="salary calculator, paycheck calculator, overtime calculator, take-home pay, tax calculator">
+    <meta name="author" content="JQH84">
+    <title>Salary Calculator | Calculate Take-Home Pay with Overtime</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         body {
@@ -89,8 +92,20 @@
             <i class="fas fa-dollar-sign"></i>
         </div>
         <div class="input-section">
+            <label for="regularRate">Regular Hourly Rate ($)</label>
+            <input type="number" id="regularRate" value="65" min="0" step="0.01" inputmode="decimal">
+        </div>
+        <div class="input-section">
+            <label for="overtimeRate">Overtime Hourly Rate ($)</label>
+            <input type="number" id="overtimeRate" value="97.5" min="0" step="0.01" inputmode="decimal">
+        </div>
+        <div class="input-section">
+            <label for="taxRate">Tax Rate (%)</label>
+            <input type="number" id="taxRate" value="27.3189" min="0" max="100" step="0.0001" inputmode="decimal">
+        </div>
+        <div class="input-section">
             <label for="frequency">Pay Frequency</label>
-            <select id="frequency" style="width: 100%; padding: 10px; font-size: 18px; border: none; border-radius: 15px; background-color: #f0f0f0; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            <select id="frequency" style="width: 100%; padding: 10px; font-size: 18px; border: none; border-radius: 15px; background-color: #ffffff; border: 2px solid #26a69a; box-shadow: 0 6px 12px rgba(38, 166, 154, 0.15);">
                 <option value="weekly">Weekly</option>
                 <option value="biweekly" selected>Biweekly</option>
                 <option value="monthly">Monthly</option>
@@ -99,7 +114,7 @@
         <div class="input-section">
             <label for="standardHours">Standard Hours per Pay Period</label>
             <span class="hint" id="standardHint">Recommended: 70 hrs (35 hrs/week)</span>
-            <input type="number" id="standardHours" value="70" min="0" step="0.1" inputmode="decimal" style="width: 100%; padding: 10px; font-size: 24px; text-align: center; border: none; border-radius: 15px; background-color: #f0f0f0; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); box-sizing: border-box;">
+            <input type="number" id="standardHours" value="70" min="0" step="0.1" inputmode="decimal">
         </div>
         <div class="input-section">
             <label for="hours">Total Hours Worked in Pay Period</label>
@@ -117,10 +132,6 @@
             <label for="overtimeBreakdown">Overtime Hours • Pay</label>
             <input type="text" id="overtimeBreakdown" readonly value="0.00 hrs • $0.00">
         </div>
-        <div class="input-section">
-            <label for="taxRate">Tax Rate (%)</label>
-            <input type="number" id="taxRate" value="27.3189" min="0" max="100" step="0.0001" inputmode="decimal" style="width: 100%; padding: 10px; font-size: 24px; text-align: center; border: none; border-radius: 15px; background-color: #f0f0f0; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); box-sizing: border-box;">
-        </div>
         <div class="output-section">
             <label for="takeHome">Take-Home Pay</label>
             <input type="text" id="takeHome" readonly value="$0.00">
@@ -136,8 +147,6 @@
         </div>
     </div>
     <script>
-        const regularRate = 65.0;
-        const overtimeRate = 97.5;
         const standardRecommendations = {
             weekly: { hours: 35, hint: 'Recommended: 35 hrs (one work week)' },
             biweekly: { hours: 70, hint: 'Recommended: 70 hrs (35 hrs/week)' },
@@ -149,11 +158,13 @@
         let netSpendable = '';
         let userAdjustedStandard = false;
 
+        const regularRateInput = document.getElementById('regularRate');
+        const overtimeRateInput = document.getElementById('overtimeRate');
         const frequencySelect = document.getElementById('frequency');
         const standardInput = document.getElementById('standardHours');
         const hoursInput = document.getElementById('hours');
         const taxInput = document.getElementById('taxRate');
-    const billsInput = document.getElementById('monthlyBills');
+        const billsInput = document.getElementById('monthlyBills');
         const standardBreakdown = document.getElementById('standardBreakdown');
         const overtimeBreakdown = document.getElementById('overtimeBreakdown');
         const standardHint = document.getElementById('standardHint');
@@ -185,6 +196,8 @@
             const hoursWorked = parseFloat(hoursInput.value) || 0;
             const frequency = frequencySelect.value;
             const standardPerPeriod = parseFloat(standardInput.value) || 0;
+            const regularRate = parseFloat(regularRateInput.value) || 0;
+            const overtimeRate = parseFloat(overtimeRateInput.value) || 0;
             const taxRate = parseFloat(taxInput.value) || 0;
             const monthlyBills = sumBills(billsInput.value);
 
@@ -234,11 +247,11 @@
             calculateSalary();
         });
 
-    taxInput.addEventListener('input', calculateSalary);
-    billsInput.addEventListener('input', calculateSalary);
-        hoursInput.addEventListener('input', calculateSalary);
-
-        applyRecommendation(frequencySelect.value, true);
+        regularRateInput.addEventListener('input', calculateSalary);
+        overtimeRateInput.addEventListener('input', calculateSalary);
+        taxInput.addEventListener('input', calculateSalary);
+        billsInput.addEventListener('input', calculateSalary);
+        hoursInput.addEventListener('input', calculateSalary);        applyRecommendation(frequencySelect.value, true);
         calculateSalary();
     </script>
 </body>
